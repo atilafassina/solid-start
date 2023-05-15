@@ -30,7 +30,7 @@ export default function Login() {
   const data = useRouteData<typeof routeData>();
   const params = useParams();
 
-  const [loggingIn, { Form }] = createServerAction$(async (form: FormData) => {
+  const [loggingIn, { Form }] = createServerAction$(async (form: FormData, { request }) => {
     const loginType = form.get("loginType");
     const username = form.get("username");
     const password = form.get("password");
@@ -61,7 +61,7 @@ export default function Login() {
             fields
           });
         }
-        return createUserSession(`${user.id}`, redirectTo);
+        return createUserSession(`${user.id}`, redirectTo, request);
       }
       case "register": {
         const userExists = await db.user.findUnique({ where: { username } });
@@ -76,7 +76,7 @@ export default function Login() {
             fields
           });
         }
-        return createUserSession(`${user.id}`, redirectTo);
+        return createUserSession(`${user.id}`, redirectTo, request);
       }
       default: {
         throw new FormError(`Login type invalid`, { fields });

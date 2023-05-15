@@ -20,7 +20,7 @@ export async function login({ username, password }: LoginForm) {
   return user;
 }
 
-const sessionSecret = import.meta.env.SESSION_SECRET;
+const sessionSecret = process.env.SESSION_SECRET || "";
 
 const storage = createCookieSessionStorage({
   cookie: {
@@ -28,7 +28,7 @@ const storage = createCookieSessionStorage({
     // secure doesn't work on localhost for Safari
     // https://web.dev/when-to-use-local-https/
     secure: true,
-    secrets: ["hello"],
+    secrets: [sessionSecret],
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
@@ -75,7 +75,7 @@ export async function getUser(request: Request) {
 }
 
 export async function logout(request: Request) {
-  const session = await storage.getSession(request.headers.get("Cookie"));
+  const session = await getUserSession(request);
   return redirect("/login", {
     headers: {
       "Set-Cookie": await storage.destroySession(session)
@@ -83,8 +83,8 @@ export async function logout(request: Request) {
   });
 }
 
-export async function createUserSession(userId: string, redirectTo: string) {
-  const session = await storage.getSession();
+export async function createUserSession(userId: string, redirectTo: string, request: Request) {
+  const session = await getUserSession(request);
   session.set("userId", userId);
   return redirect(redirectTo, {
     headers: {
